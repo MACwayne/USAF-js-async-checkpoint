@@ -32,46 +32,31 @@ process.argv.forEach(function (val, index, array) {
     }
 });
 
-//console.log(inputFile);
+var pokemonList = fs.readFileSync("./" + inputFile).toString('utf-8').split("\n");
+var promiseList = [];
 
-var text = fs.readFileSync("./" + inputFile).toString('utf-8');
-
-
-text = text.split("\n")
-var pokemon = []
-
-for (index in text) {
-    pokemon.push(text[index])
-    fetch('https://pokeapi.co/api/v2/pokemon/' + text[index] + '/')
-        .then(response => {
-            return response.json()
-        })
-        .then(data => {
-            var returnTypes = []
-            for (type of data.types) {
-                returnTypes.push(type.type.name)
-                //console.log("type: " + JSON.stringify(type.type.name))
-            }
-            
-            console.log(pokemon[index] + ": "+ returnTypes)
-            //returnTypes = []
-            //console.log(JSON.stringify(data.types));
-        //type = JSON.stringify(data.types)
-        })
-        // .then(function () {
-        //     for (index in text ) {
-        //         console.log(text[index] + ": " + returnTypes)
-        //     }
-        //   })
+for (pokemon of pokemonList) {
+    promiseList.push(fetch('https://pokeapi.co/api/v2/pokemon/' + pokemon + '/'))
 }
 
+var output = []
 
-//console.log(type)
-
-// function(input) {
-
-// }
-
-// fs.readFile("./mytext.txt", function(text){
-//     var textByLine = text.split("\n")
-// });
+Promise.all(promiseList)
+    .then(result => Promise.all(result.map(v => v.json())))
+    .then(results =>  {
+        for (result of results) {
+            var types = [];
+            for (type of result.types) {
+                types.push(type.type.name)
+            }
+            output[result.name] = types;
+        }
+    })
+    .then(results => {
+        for (pokemon of pokemonList) {
+            console.log (pokemon.charAt(0).toUpperCase() + pokemon.slice(1) + ": " + output[pokemon].join(', '))
+        }
+    })
+    .catch((err) => {
+        console.log(err);
+    });
