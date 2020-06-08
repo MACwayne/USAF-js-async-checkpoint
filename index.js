@@ -39,11 +39,10 @@ for (pokemon of pokemonList) {
     promiseList.push(fetch('https://pokeapi.co/api/v2/pokemon/' + pokemon + '/'))
 }
 
-var output = []
-
 Promise.all(promiseList)
     .then(result => Promise.all(result.map(v => v.json())))
     .then(results =>  {
+        var output = []
         for (result of results) {
             var types = [];
             for (type of result.types) {
@@ -51,10 +50,11 @@ Promise.all(promiseList)
             }
             output[result.name] = types;
         }
+        return output
     })
     .then(results => {
         for (pokemon of pokemonList) {
-            console.log (pokemon.charAt(0).toUpperCase() + pokemon.slice(1) + ": " + output[pokemon].join(', '))
+            console.log (pokemon.charAt(0).toUpperCase() + pokemon.slice(1) + ": " + results[pokemon].join(', '))
         }
     })
     .catch((err) => {
